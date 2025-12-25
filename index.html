@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Days Without Yelling</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+
+        .counter-display {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .days-count {
+            font-size: 5em;
+            font-weight: bold;
+            color: #764ba2;
+            line-height: 1;
+        }
+
+        .days-label {
+            font-size: 1.2em;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        .start-date {
+            text-align: center;
+            color: #888;
+            font-size: 0.9em;
+            margin-bottom: 30px;
+        }
+
+        .counter-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+
+        .counter-buttons button {
+            width: 60px;
+            height: 60px;
+            border: none;
+            border-radius: 50%;
+            font-size: 2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .increment-btn {
+            background: #51cf66;
+            color: white;
+        }
+
+        .decrement-btn {
+            background: #ff8787;
+            color: white;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .reset-btn {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .mad-check-btn {
+            background: #ffd93d;
+            color: #333;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-content h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .yes-btn {
+            background: #51cf66;
+            color: white;
+        }
+
+        .no-btn {
+            background: #adb5bd;
+            color: white;
+        }
+
+        .reminder-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            margin-top: 20px;
+        }
+
+        .reminder-box h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .reminder-box ul {
+            list-style-position: inside;
+            color: #495057;
+            line-height: 1.8;
+        }
+
+        .close-btn {
+            background: #667eea;
+            color: white;
+            width: 100%;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Days Without Yelling</h1>
+        
+        <div class="counter-display">
+            <div class="days-count" id="daysCount">0</div>
+            <div class="days-label">days</div>
+        </div>
+        
+        <div class="counter-buttons">
+            <button class="decrement-btn" onclick="decrementDays()" title="Decrease">−</button>
+            <button class="increment-btn" onclick="incrementDays()" title="Increase">+</button>
+        </div>
+        
+        <div class="start-date" id="startDate">Start your journey today!</div>
+        
+        <div class="buttons">
+            <button class="reset-btn" onclick="resetCounter()">Reset Counter</button>
+            <button class="mad-check-btn" onclick="openMadCheck()">Feeling Mad?</button>
+        </div>
+    </div>
+
+    <div class="modal" id="madModal">
+        <div class="modal-content">
+            <h2>Are you mad at anything right now?</h2>
+            <div class="modal-buttons">
+                <button class="yes-btn" onclick="showReminders()">Yes</button>
+                <button class="no-btn" onclick="closeMadModal()">No</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="reminderModal">
+        <div class="modal-content">
+            <h2>Remember to:</h2>
+            <div class="reminder-box">
+                <ul>
+                    <li>Take 3 deep breaths</li>
+                    <li>Step away for a moment</li>
+                    <li>Count to 10 slowly</li>
+                    <li>Ask yourself: Will this matter tomorrow?</li>
+                    <li>Speak calmly and clearly</li>
+                    <li>It's okay to take a break</li>
+                    <li>You can express feelings without yelling</li>
+                </ul>
+            </div>
+            <button class="close-btn" onclick="closeReminderModal()">Got it, thanks!</button>
+        </div>
+    </div>
+
+    <script>
+        let dayCount = 0;
+
+        function loadData() {
+            const saved = localStorage.getItem('yellTrackerDays');
+            if (saved) {
+                dayCount = parseInt(saved);
+                updateDisplay();
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('yellTrackerDays', dayCount.toString());
+        }
+
+        function updateDisplay() {
+            document.getElementById('daysCount').textContent = dayCount;
+            if (dayCount > 0) {
+                document.getElementById('startDate').textContent = 
+                    `Keep going! You're doing great! 🌟`;
+            } else {
+                document.getElementById('startDate').textContent = 'Start your journey today!';
+            }
+        }
+
+        function incrementDays() {
+            dayCount++;
+            saveData();
+            updateDisplay();
+        }
+
+        function decrementDays() {
+            if (dayCount > 0) {
+                dayCount--;
+                saveData();
+                updateDisplay();
+            }
+        }
+
+        function resetCounter() {
+            if (confirm('Are you sure you want to reset the counter to 0?')) {
+                dayCount = 0;
+                saveData();
+                updateDisplay();
+            }
+        }
+
+        function openMadCheck() {
+            document.getElementById('madModal').classList.add('active');
+        }
+
+        function closeMadModal() {
+            document.getElementById('madModal').classList.remove('active');
+        }
+
+        function showReminders() {
+            closeMadModal();
+            document.getElementById('reminderModal').classList.add('active');
+        }
+
+        function closeReminderModal() {
+            document.getElementById('reminderModal').classList.remove('active');
+        }
+
+        // Initialize on load
+        loadData();
+    </script>
+</body>
+</html>
