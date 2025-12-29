@@ -423,11 +423,11 @@
         }
 
         function openLogIncident() {
-            // Set default date to today
+            document.getElementById('logIncidentModal').classList.add('active');
+            // Set default date to today after modal is visible
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('incidentDateInput').value = today;
             document.getElementById('incidentReasonInput').value = '';
-            document.getElementById('logIncidentModal').classList.add('active');
         }
 
         function closeLogIncidentModal() {
