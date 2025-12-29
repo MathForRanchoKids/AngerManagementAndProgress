@@ -198,6 +198,80 @@
             width: 100%;
             margin-top: 20px;
         }
+
+        .last-incident {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 0.9em;
+        }
+
+        .last-incident h3 {
+            color: #856404;
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+
+        .incident-info {
+            color: #856404;
+            line-height: 1.6;
+        }
+
+        .incident-info strong {
+            display: inline-block;
+            min-width: 60px;
+        }
+
+        .log-incident-btn {
+            background: #e67e22;
+            color: white;
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1em;
+            resize: vertical;
+            margin-top: 10px;
+            min-height: 80px;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #495057;
+            font-weight: bold;
+        }
+
+        input[type="date"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1em;
+        }
+
+        input[type="date"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
     </style>
 </head>
 <body>
@@ -220,6 +294,16 @@
             <button class="reset-btn" onclick="resetCounter()">Reset Counter</button>
             <button class="mad-check-btn" onclick="openMadCheck()">Feeling Mad?</button>
         </div>
+
+        <button class="log-incident-btn" onclick="openLogIncident()">Log Yelling Incident</button>
+
+        <div class="last-incident" id="lastIncident" style="display: none;">
+            <h3>📝 Last Incident:</h3>
+            <div class="incident-info">
+                <div><strong>Date:</strong> <span id="incidentDate"></span></div>
+                <div><strong>Reason:</strong> <span id="incidentReason"></span></div>
+            </div>
+        </div>
     </div>
 
     <div class="modal" id="madModal">
@@ -237,9 +321,6 @@
             <h2>Remember to:</h2>
             <div class="reminder-box">
                 <ul>
-                    <li>Go to the closest pharmacy/supermarket </li>
-                    <li>Get yourself some <b>benadryl</b></li>
-                    <li>wait for 30 mins before speaking, make a timer or better write down what you want to say.</li>
                     <li>Take 3 deep breaths</li>
                     <li>Step away for a moment</li>
                     <li>Count to 10 slowly</li>
@@ -255,17 +336,41 @@
 
     <script>
         let dayCount = 0;
+        let lastIncident = null;
 
         function loadData() {
-            const saved = localStorage.getItem('yellTrackerDays');
-            if (saved) {
-                dayCount = parseInt(saved);
-                updateDisplay();
+            const savedDays = localStorage.getItem('yellTrackerDays');
+            const savedIncident = localStorage.getItem('yellTrackerIncident');
+            
+            if (savedDays) {
+                dayCount = parseInt(savedDays);
             }
+            
+            if (savedIncident) {
+                lastIncident = JSON.parse(savedIncident);
+                displayLastIncident();
+            }
+            
+            updateDisplay();
         }
 
         function saveData() {
             localStorage.setItem('yellTrackerDays', dayCount.toString());
+        }
+
+        function saveIncidentData() {
+            if (lastIncident) {
+                localStorage.setItem('yellTrackerIncident', JSON.stringify(lastIncident));
+            }
+        }
+
+        function displayLastIncident() {
+            if (lastIncident) {
+                document.getElementById('lastIncident').style.display = 'block';
+                document.getElementById('incidentDate').textContent = 
+                    new Date(lastIncident.date).toLocaleDateString();
+                document.getElementById('incidentReason').textContent = lastIncident.reason;
+            }
         }
 
         function updateDisplay() {
@@ -315,6 +420,48 @@
 
         function closeReminderModal() {
             document.getElementById('reminderModal').classList.remove('active');
+        }
+
+        function openLogIncident() {
+            // Set default date to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('incidentDateInput').value = today;
+            document.getElementById('incidentReasonInput').value = '';
+            document.getElementById('logIncidentModal').classList.add('active');
+        }
+
+        function closeLogIncidentModal() {
+            document.getElementById('logIncidentModal').classList.remove('active');
+        }
+
+        function saveIncident() {
+            const date = document.getElementById('incidentDateInput').value;
+            const reason = document.getElementById('incidentReasonInput').value.trim();
+            
+            if (!date) {
+                alert('Please select a date');
+                return;
+            }
+            
+            if (!reason) {
+                alert('Please describe what caused the yelling');
+                return;
+            }
+            
+            lastIncident = {
+                date: date,
+                reason: reason
+            };
+            
+            saveIncidentData();
+            displayLastIncident();
+            
+            // Reset counter to 0
+            dayCount = 0;
+            saveData();
+            updateDisplay();
+            
+            closeLogIncidentModal();
         }
 
         // Initialize on load
