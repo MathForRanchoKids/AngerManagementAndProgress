@@ -93,7 +93,7 @@
         .buttons {
             display: flex;
             gap: 10px;
-            margin-bottom: 30px;
+            margin-bottom: 15px;
         }
 
         button {
@@ -124,6 +124,13 @@
         .mad-check-btn {
             background: #ffd93d;
             color: #333;
+        }
+
+        .log-incident-btn {
+            background: #e67e22;
+            color: white;
+            width: 100%;
+            margin-bottom: 15px;
         }
 
         .modal {
@@ -224,13 +231,6 @@
             min-width: 60px;
         }
 
-        .log-incident-btn {
-            background: #e67e22;
-            color: white;
-            width: 100%;
-            margin-top: 15px;
-        }
-
         textarea {
             width: 100%;
             padding: 10px;
@@ -295,7 +295,7 @@
             <button class="mad-check-btn" onclick="openMadCheck()">Feeling Mad?</button>
         </div>
 
-        <button class="log-incident-btn" onclick="openLogIncident()" style="flex: none;">Log Yelling Incident</button>
+        <button class="log-incident-btn" onclick="openLogIncident()">Log Yelling Incident</button>
 
         <div class="last-incident" id="lastIncident" style="display: none;">
             <h3>📝 Last Incident:</h3>
@@ -321,6 +321,9 @@
             <h2>Remember to:</h2>
             <div class="reminder-box">
                 <ul>
+                    <li>Go to the closest pharmacy/supermarket </li>
+                    <li>Get yourself some <b>benadryl</b></li>
+                    <li>wait for 30 mins before speaking, make a timer or better write down what you want to say.</li>
                     <li>Take 3 deep breaths</li>
                     <li>Step away for a moment</li>
                     <li>Count to 10 slowly</li>
@@ -331,6 +334,24 @@
                 </ul>
             </div>
             <button class="close-btn" onclick="closeReminderModal()">Got it, thanks!</button>
+        </div>
+    </div>
+
+    <div class="modal" id="logIncidentModal">
+        <div class="modal-content">
+            <h2>Log Yelling Incident</h2>
+            <div class="form-group">
+                <label for="incidentDateInput">Date:</label>
+                <input type="date" id="incidentDateInput" required>
+            </div>
+            <div class="form-group">
+                <label for="incidentReasonInput">What caused it?</label>
+                <textarea id="incidentReasonInput" placeholder="Describe what led to the yelling..."></textarea>
+            </div>
+            <div class="modal-buttons">
+                <button class="yes-btn" onclick="saveIncident()">Save & Reset Counter</button>
+                <button class="no-btn" onclick="closeLogIncidentModal()">Cancel</button>
+            </div>
         </div>
     </div>
 
@@ -423,15 +444,20 @@
         }
 
         function openLogIncident() {
-            document.getElementById('logIncidentModal').classList.add('active');
-            // Set default date to today after modal is visible
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('incidentDateInput').value = today;
-            document.getElementById('incidentReasonInput').value = '';
+            const modal = document.getElementById('logIncidentModal');
+            if (modal) {
+                modal.classList.add('active');
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('incidentDateInput').value = today;
+                document.getElementById('incidentReasonInput').value = '';
+            }
         }
 
         function closeLogIncidentModal() {
-            document.getElementById('logIncidentModal').classList.remove('active');
+            const modal = document.getElementById('logIncidentModal');
+            if (modal) {
+                modal.classList.remove('active');
+            }
         }
 
         function saveIncident() {
@@ -456,7 +482,6 @@
             saveIncidentData();
             displayLastIncident();
             
-            // Reset counter to 0
             dayCount = 0;
             saveData();
             updateDisplay();
