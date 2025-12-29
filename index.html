@@ -62,34 +62,6 @@
             margin-bottom: 30px;
         }
 
-        .counter-buttons {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            justify-content: center;
-        }
-
-        .counter-buttons button {
-            width: 60px;
-            height: 60px;
-            border: none;
-            border-radius: 50%;
-            font-size: 2em;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .increment-btn {
-            background: #51cf66;
-            color: white;
-        }
-
-        .decrement-btn {
-            background: #ff8787;
-            color: white;
-        }
-
         .buttons {
             display: flex;
             gap: 10px;
@@ -114,11 +86,6 @@
 
         button:active {
             transform: translateY(0);
-        }
-
-        .reset-btn {
-            background: #ff6b6b;
-            color: white;
         }
 
         .mad-check-btn {
@@ -156,6 +123,8 @@
             border-radius: 15px;
             max-width: 400px;
             width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
         }
 
@@ -206,29 +175,71 @@
             margin-top: 20px;
         }
 
-        .last-incident {
+        .incidents-section {
+            margin-top: 20px;
+        }
+
+        .incidents-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .incident-item {
             background: #fff3cd;
             border: 2px solid #ffc107;
             border-radius: 10px;
             padding: 15px;
-            margin-top: 20px;
-            font-size: 0.9em;
-        }
-
-        .last-incident h3 {
-            color: #856404;
             margin-bottom: 10px;
-            font-size: 1em;
+            font-size: 0.9em;
+            position: relative;
         }
 
-        .incident-info {
+        .incident-item.latest {
+            border-color: #dc3545;
+            background: #f8d7da;
+        }
+
+        .incident-date {
             color: #856404;
-            line-height: 1.6;
+            font-weight: bold;
+            margin-bottom: 5px;
         }
 
-        .incident-info strong {
-            display: inline-block;
-            min-width: 60px;
+        .incident-item.latest .incident-date {
+            color: #721c24;
+        }
+
+        .incident-reason {
+            color: #856404;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .incident-item.latest .incident-reason {
+            color: #721c24;
+        }
+
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+            padding: 5px 15px;
+            font-size: 0.85em;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .delete-btn:hover {
+            background: #c82333;
+        }
+
+        .no-incidents {
+            text-align: center;
+            color: #adb5bd;
+            padding: 20px;
+            font-style: italic;
         }
 
         textarea {
@@ -272,6 +283,16 @@
             outline: none;
             border-color: #667eea;
         }
+
+        .latest-badge {
+            display: inline-block;
+            background: #dc3545;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-size: 0.75em;
+            margin-left: 8px;
+        }
     </style>
 </head>
 <body>
@@ -283,26 +304,16 @@
             <div class="days-label">days</div>
         </div>
         
-        <div class="counter-buttons">
-            <button class="decrement-btn" onclick="decrementDays()" title="Decrease">−</button>
-            <button class="increment-btn" onclick="incrementDays()" title="Increase">+</button>
-        </div>
-        
         <div class="start-date" id="startDate">Start your journey today!</div>
         
         <div class="buttons">
-            <button class="reset-btn" onclick="resetCounter()">Reset Counter</button>
             <button class="mad-check-btn" onclick="openMadCheck()">Feeling Mad?</button>
+            <button class="log-incident-btn" onclick="openLogIncident()">Log Incident</button>
         </div>
 
-        <button class="log-incident-btn" onclick="openLogIncident()">Log Yelling Incident</button>
-
-        <div class="last-incident" id="lastIncident" style="display: none;">
-            <h3>📝 Last Incident:</h3>
-            <div class="incident-info">
-                <div><strong>Date:</strong> <span id="incidentDate"></span></div>
-                <div><strong>Reason:</strong> <span id="incidentReason"></span></div>
-            </div>
+        <div class="incidents-section">
+            <h3>📝 Incident History</h3>
+            <div id="incidentsList"></div>
         </div>
     </div>
 
@@ -349,81 +360,105 @@
                 <textarea id="incidentReasonInput" placeholder="Describe what led to the yelling..."></textarea>
             </div>
             <div class="modal-buttons">
-                <button class="yes-btn" onclick="saveIncident()">Save & Reset Counter</button>
+                <button class="yes-btn" onclick="saveIncident()">Save Incident</button>
                 <button class="no-btn" onclick="closeLogIncidentModal()">Cancel</button>
             </div>
         </div>
     </div>
 
     <script>
-        let dayCount = 0;
-        let lastIncident = null;
+        let incidents = [];
 
         function loadData() {
-            const savedDays = localStorage.getItem('yellTrackerDays');
-            const savedIncident = localStorage.getItem('yellTrackerIncident');
+            const savedIncidents = localStorage.getItem('yellTrackerIncidents');
             
-            if (savedDays) {
-                dayCount = parseInt(savedDays);
-            }
-            
-            if (savedIncident) {
-                lastIncident = JSON.parse(savedIncident);
-                displayLastIncident();
+            if (savedIncidents) {
+                incidents = JSON.parse(savedIncidents);
             }
             
             updateDisplay();
+            displayIncidents();
         }
 
-        function saveData() {
-            localStorage.setItem('yellTrackerDays', dayCount.toString());
+        function saveIncidents() {
+            localStorage.setItem('yellTrackerIncidents', JSON.stringify(incidents));
         }
 
-        function saveIncidentData() {
-            if (lastIncident) {
-                localStorage.setItem('yellTrackerIncident', JSON.stringify(lastIncident));
+        function calculateDaysSinceLastIncident() {
+            if (incidents.length === 0) {
+                return 0;
             }
-        }
 
-        function displayLastIncident() {
-            if (lastIncident) {
-                document.getElementById('lastIncident').style.display = 'block';
-                document.getElementById('incidentDate').textContent = 
-                    new Date(lastIncident.date).toLocaleDateString();
-                document.getElementById('incidentReason').textContent = lastIncident.reason;
-            }
+            // Find the most recent incident
+            const sortedIncidents = [...incidents].sort((a, b) => 
+                new Date(b.date) - new Date(a.date)
+            );
+            const lastIncident = sortedIncidents[0];
+            
+            const lastDate = new Date(lastIncident.date);
+            const today = new Date();
+            
+            // Reset time to midnight for accurate day calculation
+            lastDate.setHours(0, 0, 0, 0);
+            today.setHours(0, 0, 0, 0);
+            
+            const diffTime = today - lastDate;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            
+            return diffDays;
         }
 
         function updateDisplay() {
-            document.getElementById('daysCount').textContent = dayCount;
-            if (dayCount > 0) {
+            const days = calculateDaysSinceLastIncident();
+            document.getElementById('daysCount').textContent = days;
+            
+            if (days > 0) {
                 document.getElementById('startDate').textContent = 
                     `Keep going! You're doing great! 🌟`;
+            } else if (incidents.length > 0) {
+                document.getElementById('startDate').textContent = 
+                    'Today is a new day. You can do this!';
             } else {
                 document.getElementById('startDate').textContent = 'Start your journey today!';
             }
         }
 
-        function incrementDays() {
-            dayCount++;
-            saveData();
-            updateDisplay();
-        }
-
-        function decrementDays() {
-            if (dayCount > 0) {
-                dayCount--;
-                saveData();
-                updateDisplay();
+        function displayIncidents() {
+            const container = document.getElementById('incidentsList');
+            
+            if (incidents.length === 0) {
+                container.innerHTML = '<div class="no-incidents">No incidents logged yet. Keep up the great work! 🎉</div>';
+                return;
             }
-        }
 
-        function resetCounter() {
-            if (confirm('Are you sure you want to reset the counter to 0?')) {
-                dayCount = 0;
-                saveData();
-                updateDisplay();
-            }
+            // Sort incidents by date (most recent first)
+            const sortedIncidents = [...incidents].sort((a, b) => 
+                new Date(b.date) - new Date(a.date)
+            );
+
+            const mostRecentDate = sortedIncidents[0].date;
+
+            container.innerHTML = sortedIncidents.map((incident, index) => {
+                const isLatest = incident.date === mostRecentDate;
+                const incidentDate = new Date(incident.date);
+                const formattedDate = incidentDate.toLocaleDateString('en-US', { 
+                    weekday: 'short', 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric' 
+                });
+                
+                return `
+                    <div class="incident-item ${isLatest ? 'latest' : ''}">
+                        <div class="incident-date">
+                            ${formattedDate}
+                            ${isLatest ? '<span class="latest-badge">LATEST</span>' : ''}
+                        </div>
+                        <div class="incident-reason">${incident.reason}</div>
+                        <button class="delete-btn" onclick="deleteIncident(${incident.id})">Delete</button>
+                    </div>
+                `;
+            }).join('');
         }
 
         function openMadCheck() {
@@ -474,19 +509,27 @@
                 return;
             }
             
-            lastIncident = {
+            const newIncident = {
+                id: Date.now(),
                 date: date,
                 reason: reason
             };
             
-            saveIncidentData();
-            displayLastIncident();
-            
-            dayCount = 0;
-            saveData();
+            incidents.push(newIncident);
+            saveIncidents();
             updateDisplay();
+            displayIncidents();
             
             closeLogIncidentModal();
+        }
+
+        function deleteIncident(id) {
+            if (confirm('Are you sure you want to delete this incident?')) {
+                incidents = incidents.filter(incident => incident.id !== id);
+                saveIncidents();
+                updateDisplay();
+                displayIncidents();
+            }
         }
 
         // Initialize on load
