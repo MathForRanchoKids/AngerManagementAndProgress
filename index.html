@@ -532,6 +532,9 @@
             }
         }
 
+        // Update counter every minute to catch day changes
+        setInterval(updateDisplay, 60000);
+
         // Initialize on load
         loadData();
     </script>
